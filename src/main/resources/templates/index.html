@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Пошук Квартир</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Підключення бібліотеки SheetJS через CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Функція для експорту HTML-таблиці в Excel
+        function exportTableToExcel(tableID, filename = 'export.xlsx') {
+            let table = document.getElementById(tableID);
+            if (!table) {
+                console.error("Таблиця не знайдена: " + tableID);
+                return;
+            }
+            // Конвертуємо таблицю у книгу (workbook)
+            let workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet 1" });
+            // Записуємо файл і запускаємо завантаження
+            XLSX.writeFile(workbook, filename);
+        }
+
+        // Завантаження областей при завантаженні сторінки
+        window.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/oblasts')
+                .then(response => response.json())
+                .then(data => {
+                    let oblastSelect = document.getElementById('oblastSelect');
+                    data.forEach(function(oblast) {
+                        let option = document.createElement('option');
+                        option.value = oblast.stateID;
+                        option.text = oblast.name;
+                        oblastSelect.add(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching oblasts:', error));
+        });
+
+        // Завантаження міст при зміні області
+        function loadCities() {
+            let oblastSelect = document.getElementById('oblastSelect');
+            let stateId = oblastSelect.value;
+            let citySelect = document.getElementById('citySelect');
+            // Очистити існуючі опції
+            citySelect.innerHTML = '<option value="">--Оберіть місто--</option>';
+            if (stateId) {
+                fetch('/api/cities?stateId=' + stateId)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.forEach(function(city) {
+                            let option = document.createElement('option');
+                            option.value = city.cityID;
+                            option.text = city.name;
+                            citySelect.add(option);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching cities:', error));
+            }
+        }
+
+        // Обробка відправлення форми через AJAX з використанням POST
+        window.addEventListener('DOMContentLoaded', function() {
+            const searchForm = document.getElementById('searchForm');
+            searchForm.addEventListener('submit', function(event) {
+                event.preventDefault(); // Заборонити стандартну відправку форми
+                let formData = new FormData(searchForm);
+                // Для дебагу виведемо значення форми в консолі
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+                fetch('/api/search', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Data from /api/search:', data);
+                        // Припускаємо, що data є масивом об'єктів AdDetails
+                        let results = Array.isArray(data) ? data : (data.results || []);
+                        let table = document.getElementById('resultsTable');
+                        let tableBody = document.getElementById('resultsBody');
+                        tableBody.innerHTML = ''; // Очистити попередні результати
+
+                        if (results.length === 0) {
+                            document.getElementById('resultsContainer').innerHTML = '<p>Результати не знайдено.</p>';
+                            document.getElementById('exportBtn').style.display = 'none';
+                        } else {
+                            results.forEach(function(item) {
+                                let row = document.createElement('tr');
+
+                                // Створення клітинок для кожного стовпця
+                                let streetCell = document.createElement('td');
+                                let roomsCell = document.createElement('td');
+                                let priceCell = document.createElement('td');
+                                let linkCell = document.createElement('td');
+
+                                streetCell.textContent = item.street_name_uk;
+                                roomsCell.textContent = item.rooms_count;
+                                priceCell.textContent = item.price;
+
+                                let link = document.createElement('a');
+                                link.href = "https://dom.ria.com/uk/" + item.beautiful_url;
+                                link.textContent = "Дивитися оголошення";
+                                link.target = '_blank';
+                                linkCell.appendChild(link);
+
+                                row.appendChild(streetCell);
+                                row.appendChild(roomsCell);
+                                row.appendChild(priceCell);
+                                row.appendChild(linkCell);
+
+                                tableBody.appendChild(row);
+                            });
+                            // Показати таблицю та кнопку експорту
+                            table.style.display = 'table';
+                            document.getElementById('exportBtn').style.display = 'inline-block';
+                        }
+                    })
+                    .catch(error => console.error('Error during search:', error));
+            });
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <h1>Пошук Квартир</h1>
+    <!-- Форма пошуку -->
+    <form id="searchForm">
+        <div>
+            <label for="oblastSelect">Область:</label>
+            <select id="oblastSelect" name="stateId" onchange="loadCities()">
+                <option value="">--Оберіть область--</option>
+            </select>
+        </div>
+        <br/>
+        <div>
+            <label for="citySelect">Місто:</label>
+            <select id="citySelect" name="cityId">
+                <option value="">--Оберіть місто--</option>
+            </select>
+        </div>
+        <br/>
+        <div>
+            <label for="priceFrom">Ціна від:</label>
+            <input type="number" id="priceFrom" name="priceFrom" step="0.01" placeholder="Мінімальна ціна" />
+        </div>
+        <br/>
+        <div>
+            <label for="priceTo">Ціна до:</label>
+            <input type="number" id="priceTo" name="priceTo" step="0.01" placeholder="Максимальна ціна" />
+        </div>
+        <br/>
+        <button type="submit">Пошук</button>
+    </form>
+
+    <br/>
+
+    <!-- Контейнер для результатів пошуку -->
+    <div id="resultsContainer">
+        <table id="resultsTable" border="1" style="display: none;">
+            <thead>
+            <tr>
+                <th>Вулиця</th>
+                <th>Кімнати</th>
+                <th>Ціна</th>
+                <th>Посилання</th>
+            </tr>
+            </thead>
+            <tbody id="resultsBody">
+            </tbody>
+        </table>
+        <br/>
+        <!-- Кнопка для експорту -->
+        <button id="exportBtn" onclick="exportTableToExcel('resultsTable', 'export.xlsx')" style="display: none;">
+            Експорт в Excel (клієнт)
+        </button>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,62 @@
+[
+  {
+    "street_name_uk": "Вулиця Шевченка",
+    "rooms_count": 2,
+    "price": 12000,
+    "beautiful_url": "shevchenka-12"
+  },
+  {
+    "street_name_uk": "Вулиця Грушевського",
+    "rooms_count": 3,
+    "price": 15000,
+    "beautiful_url": "hrushevskogo-34"
+  },
+  {
+    "street_name_uk": "Вулиця Лесі Українки",
+    "rooms_count": 1,
+    "price": 8000,
+    "beautiful_url": "lesi-ukrainky-56"
+  },
+  {
+    "street_name_uk": "Вулиця Смілянська",
+    "rooms_count": 2,
+    "price": 13000,
+    "beautiful_url": "smilyanska-78"
+  },
+  {
+    "street_name_uk": "Вулиця Франка",
+    "rooms_count": 3,
+    "price": 16000,
+    "beautiful_url": "franka-90"
+  },
+  {
+    "street_name_uk": "Вулиця Мазепи",
+    "rooms_count": 2,
+    "price": 11000,
+    "beautiful_url": "mazepy-11"
+  },
+  {
+    "street_name_uk": "Вулиця Героїв",
+    "rooms_count": 1,
+    "price": 9000,
+    "beautiful_url": "heroiv-22"
+  },
+  {
+    "street_name_uk": "Вулиця Пушкіна",
+    "rooms_count": 4,
+    "price": 20000,
+    "beautiful_url": "pushkina-33"
+  },
+  {
+    "street_name_uk": "Вулиця Коцюбинського",
+    "rooms_count": 2,
+    "price": 14000,
+    "beautiful_url": "kotsiubynskoho-44"
+  },
+  {
+    "street_name_uk": "Вулиця Замкова",
+    "rooms_count": 3,
+    "price": 17000,
+    "beautiful_url": "zamkova-55"
+  }
+]
